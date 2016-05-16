@@ -22,21 +22,21 @@ from google.appengine.ext import ndb
 album_key = ndb.Key('Albumfotos', 'hads1015')
 
 class Usuarios(ndb.Model):
-	usuario = ndb.TextProperty()
-	contra = ndb.TextProperty()
+  usuario = ndb.TextProperty()
+  contra = ndb.TextProperty()
 
-	
+
 class MainHandler(webapp2.RequestHandler):
-    def get(self):
-        self.response.out.write("<html><body><h1>Pagina de Inicio</h1> <br/> Usuario: <br/> Contrasena: <br/><a href=reg> Registro </a> <br/><br/> <a href=luser> login user </a><br/> <a href=ladmin> login admin </a><br/>")
-		
-		#DA ERRORv
-		#lusuarios = Usuarios.query()
-							
-		for usuarios in lusuarios:
-			self.response.out.write('usuario: %s' % cgi.escape(usuarios.usuario))
-			self.response.out.write('usuario: %s' % cgi.escape(usuarios.contra))
-		self.response.out.write("</body></html>")
+  def get(self):
+    self.response.out.write("<html><body><h1>Pagina de Inicio</h1> <br/> Usuario: <br/> Contrasena: <br/><a href=reg> Registro </a> <br/><br/> <a href=luser> login user </a><br/> <a href=ladmin> login admin </a><br/>")
+    lusuarios = ndb.gql('SELECT * '
+                        'FROM Usuarios '
+                        'WHERE ANCESTOR IS :1 ',
+                        album_key)
+    for usuarios in lusuarios:
+      self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.usuario))
+      self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.contra))
+      self.response.out.write("</body></html>")
 
 class RegistroHandler(webapp2.RequestHandler):
 	def get(self):
