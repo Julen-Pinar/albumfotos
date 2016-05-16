@@ -15,11 +15,73 @@
 # limitations under the License.
 #
 import webapp2
+import cgi
 
+from google.appengine.ext import ndb
+
+album_key = ndb.Key('Albumfotos', 'hads1015')
+
+class Usuarios(ndb.Model):
+	usuario = ndb.TextProperty()
+	contra = ndb.TextProperty()
+
+	
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.write('Hello world!')
+        self.response.out.write("<html><body><h1>Pagina de Inicio</h1> <br/> Usuario: <br/> Contrasena: <br/><a href=reg> Registro </a> <br/><br/> <a href=luser> login user </a><br/> <a href=ladmin> login admin </a><br/>")
+		
+		#DA ERRORv
+		#lusuarios = Usuarios.query()
+							
+		for usuarios in lusuarios:
+			self.response.out.write('usuario: %s' % cgi.escape(usuarios.usuario))
+			self.response.out.write('usuario: %s' % cgi.escape(usuarios.contra))
+		self.response.out.write("</body></html>")
+
+class RegistroHandler(webapp2.RequestHandler):
+	def get(self):
+		self.response.out.write("<html><body><h1>Pagina de Registro</h1><br/> Introduce los datos <br/>")
+		self.response.out.write("""
+			<form action="/registro" method="post">
+				<div>Nombre: <textarea name="nombre" rows="1" cols="30"></textarea></div>
+				<div>Contra: <textarea name="contra" rows="1" cols="30"></textarea></div>
+				<div><input type="submit" value="Registrarse"></div> <br/>
+				 <a href= '/'> Principal </a> <br/>
+			</form>
+		</body>
+	</html>""")
+
+class Registrar (webapp2.RequestHandler):
+	def post(self):
+		usuarios = Usuarios(parent=album_key)
+		
+		usuarios.usuario = self.request.get('nombre')
+		usuarios.contra = self.request.get('contra')
+		usuarios.put()
+		self.redirect('/')
+		
+class LoginUserHandler(webapp2.RequestHandler):
+	def get(self):
+		self.response.write("<h1>Pagina de Usuario</h1> <br/> <a href= '/'> Principal </a>")
+		
+class LoginAdminHandler(webapp2.RequestHandler):
+	def get(self):
+		self.response.write("<h1>Pagina de Administrador</h1> <br/> <a href= '/'> Principal </a>")
+		
+class AdminUserHandler(webapp2.RequestHandler):
+	def get(self):
+		self.response.write("<h1>Admin: Lista de usuarios </h1>")
+
+class AdminAlbumHandler(webapp2.RequestHandler):
+	def get(self):
+		self.response.write("<h1>Admin: Lista de albumes </h1>")
 
 app = webapp2.WSGIApplication([
-    ('/', MainHandler)
+    ('/', MainHandler),
+	('/reg', RegistroHandler),
+	('/luser', LoginUserHandler),
+	('/ladmin', LoginAdminHandler),
+	('/auser', AdminUserHandler),
+	('/aalbum', AdminAlbumHandler),
+	('/registro', Registrar),
 ], debug=True)
