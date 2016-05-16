@@ -28,15 +28,23 @@ class Usuarios(ndb.Model):
 
 class MainHandler(webapp2.RequestHandler):
   def get(self):
-    self.response.out.write("<html><body><h1>Pagina de Inicio</h1> <br/> Usuario: <br/> Contrasena: <br/><a href=reg> Registro </a> <br/><br/> <a href=luser> login user </a><br/> <a href=ladmin> login admin </a><br/>")
-    lusuarios = ndb.gql('SELECT * '
-                        'FROM Usuarios '
-                        'WHERE ANCESTOR IS :1 ',
-                        album_key)
-    for usuarios in lusuarios:
-      self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.usuario))
-      self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.contra))
-      self.response.out.write("</body></html>")
+    self.response.out.write("<html><body><h1>Pagina de Inicio</h1><br/><br/>")
+    #lusuarios = ndb.gql('SELECT * '
+                        #'FROM Usuarios '
+                        #'WHERE ANCESTOR IS :1 ',
+                        #album_key)
+    #for usuarios in lusuarios:
+      #self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.usuario))
+      #self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.contra))
+    self.response.out.write("""
+			<form action="/logueo" method="post">
+				<div>Nombre: <textarea name="nombre" rows="1" cols="30"></textarea></div>
+				<div>Contrasena: <textarea name="contra" rows="1" cols="30"></textarea></div>
+				<div><input type="submit" value="Login"></div> <br/>
+				 <a href=reg> Registro </a> <br/>
+			</form>
+		</body>
+	</html>""")
 
 class RegistroHandler(webapp2.RequestHandler):
 	def get(self):
@@ -60,6 +68,22 @@ class Registrar (webapp2.RequestHandler):
 		usuarios.put()
 		self.redirect('/')
 		
+class Loguear (webapp2.RequestHandler):
+	def post(self):
+		usuarios = Usuarios(parent=album_key)
+		lusuarios = ndb.gql('SELECT * '
+                        'FROM Usuarios '
+                        'WHERE ANCESTOR IS :1 ',
+                        album_key)
+		red = 0
+		for usuarios in lusuarios:
+		  if cgi.escape(usuarios.usuario) == self.request.get('nombre') and cgi.escape(usuarios.contra) == self.request.get('contra'):
+		    red = 1
+		    break
+		if red == 1:
+		  self.redirect('luser')
+		elif red == 0:
+		  self.redirect('/')
 class LoginUserHandler(webapp2.RequestHandler):
 	def get(self):
 		self.response.write("<h1>Pagina de Usuario</h1> <br/> <a href= '/'> Principal </a>")
@@ -84,4 +108,5 @@ app = webapp2.WSGIApplication([
 	('/auser', AdminUserHandler),
 	('/aalbum', AdminAlbumHandler),
 	('/registro', Registrar),
+	('/logueo', Loguear),
 ], debug=True)
