@@ -16,6 +16,7 @@
 #
 import webapp2
 import cgi
+import re
 
 from google.appengine.ext import ndb
 
@@ -38,7 +39,7 @@ class MainHandler(webapp2.RequestHandler):
       #self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.contra))
     self.response.out.write("""
 			<form action="/logueo" method="post">
-				<div>Nombre: <textarea name="nombre" rows="1" cols="30"></textarea></div>
+				<div>Email: <textarea name="nombre" rows="1" cols="30"></textarea></div>
 				<div>Contrasena: <textarea name="contra" rows="1" cols="30"></textarea></div>
 				<div><input type="submit" value="Login"></div> <br/>
 				 <a href=reg> Registro </a> <br/>
@@ -51,7 +52,7 @@ class RegistroHandler(webapp2.RequestHandler):
 		self.response.out.write("<html><body><h1>Pagina de Registro</h1><br/> Introduce los datos <br/>")
 		self.response.out.write("""
 			<form action="/registro" method="post">
-				<div>Nombre: <textarea name="nombre" rows="1" cols="30"></textarea></div>
+				<div>Email: <textarea name="nombre" rows="1" cols="30"></textarea></div>
 				<div>Contra: <textarea name="contra" rows="1" cols="30"></textarea></div>
 				<div><input type="submit" value="Registrarse"></div> <br/>
 				 <a href= '/'> Principal </a> <br/>
@@ -62,11 +63,19 @@ class RegistroHandler(webapp2.RequestHandler):
 class Registrar (webapp2.RequestHandler):
 	def post(self):
 		usuarios = Usuarios(parent=album_key)
-		
-		usuarios.usuario = self.request.get('nombre')
-		usuarios.contra = self.request.get('contra')
-		usuarios.put()
-		self.redirect('/')
+		pattern1 = re.compile("^[a-zA-Z]+\d{3}@ikasle.ehu(.es|.eus)$")
+		pattern2 = re.compile("^.{6,}$")
+		if not pattern1.match(self.request.get('nombre')):
+		  self.response.out.write("Debes proporcionar un email valido.")
+		  self.response.write(" <br/> <a href= reg> Volver al registro </a>")
+		elif not pattern2.match(self.request.get('contra')):
+		  self.response.out.write("La contrasena debe tener mas de 6 caracteres.")
+		  self.response.write(" <br/> <a href= reg> Volver al registro </a>")
+		else:
+		 usuarios.usuario = self.request.get('nombre')
+		 usuarios.contra = self.request.get('contra')
+		 usuarios.put()
+		 self.redirect('/')
 		
 class Loguear (webapp2.RequestHandler):
 	def post(self):
