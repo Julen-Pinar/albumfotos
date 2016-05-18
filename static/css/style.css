@@ -29,3 +29,12 @@ th:nth-child(1) {
 .photo_name {
 	font-size: 1.5em;
 }
+
+.wrap-this {
+	width:500px;
+	float:right;
+}
+
+.wrap-this .title {
+	width:100px;
+}

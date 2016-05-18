@@ -15,3 +15,9 @@ indexes:
   properties:
   - name: last_touch_date_time
     direction: desc
+
+- kind: Fotos
+  ancestor: yes
+  properties:
+  - name: last_touch_date_time
+    direction: desc
