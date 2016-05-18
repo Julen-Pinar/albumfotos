@@ -21,6 +21,7 @@ import session_module
 
 from google.appengine.ext import ndb
 from webapp2_extras import sessions
+from base64 import b64encode
 
 album_key = ndb.Key('Albumfotos', 'hads1015')
 
@@ -193,7 +194,18 @@ class EditAlbumHandler(session_module.BaseSessionHandler):
 		album_entity_key = ndb.Key(urlsafe=self.request.get('keyalbum'))
 		album = album_entity_key.get()
 		self.response.out.write("album: %s <br/>" % album.nombre)
-		self.response.out.write("Subir una foto:")
+		lfotos = Fotos.query()
+		for foto in lfotos:
+		  if foto.albumid == self.request.get('keyalbum'):
+		    image = b64encode(foto.data)
+		    self.response.out.write("<blockquote><br/>Titulo: %s</blockquote>" % cgi.escape(foto.titulo))
+		    self.response.out.write("<blockquote><br/>Etiqueta: %s</blockquote>" % cgi.escape(foto.etiqueta))
+		    #self.response.headers['Content-Type'] = 'image/gif'
+		    #self.response.out.write(b64encode(foto.data))
+		    #self.response.out.write(foto.data.encode('base64'))
+		    #img_b64 = foto.data.getvalue().encode("base64").strip()
+		    self.response.write("<img src='data:image/png;base64,%s'/>" % foto.data.encode('base64'))
+		self.response.out.write("<br/>Subir una foto:")
 		self.response.out.write("""
 			<form action="/addpicture" method="post" enctype="multipart/form-data">
 				<input type="hidden" class="hidden" name="keyalbum" value= """ + self.request.get('keyalbum') +""" />
@@ -211,7 +223,7 @@ class AddPictureHandler(webapp2.RequestHandler):
     def post(self):
         fotos = Fotos(parent=album_key)
         fotos.titulo = self.request.get('titulofoto')
-        fotos.data = str(self.request.get('image'))
+        fotos.data = self.request.get('image')
         fotos.albumid = self.request.get('keyalbum')
         fotos.etiqueta = self.request.get('etiquetas')
         fotos.put()
