@@ -229,8 +229,16 @@ class AddPictureHandler(webapp2.RequestHandler):
         fotos.put()
         self.redirect('luser')
 		
-
-
+class PictureFinderHandler(session_module.BaseSessionHandler):
+	def post(self):
+		lfotos = Fotos.query()
+		for foto in lfotos:
+		  if self.request.get('etiqueta') in foto.etiqueta:
+		    image = b64encode(foto.data)
+		    self.response.out.write("<blockquote><br/>Titulo: %s</blockquote>" % cgi.escape(foto.titulo))
+		    self.response.out.write("<blockquote><br/>Etiqueta: %s</blockquote>" % cgi.escape(foto.etiqueta))
+		    self.response.write("<img src='data:image/png;base64,%s'/>" % foto.data.encode('base64'))
+			
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
 	('/reg', RegistroHandler),
@@ -243,5 +251,6 @@ app = webapp2.WSGIApplication([
 	('/crearAlbum', CreateAlbumHandler),
 	('/editaralbum', EditAlbumHandler),
 	('/addpicture', AddPictureHandler),
+	('/buscafotos', PictureFinderHandler),
 ], 	config=session_module.myconfig_dict, 
 	debug=True)
