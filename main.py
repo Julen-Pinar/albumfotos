@@ -25,7 +25,7 @@ album_key = ndb.Key('Albumfotos', 'hads1015')
 class Usuarios(ndb.Model):
   usuario = ndb.TextProperty()
   contra = ndb.TextProperty()
-
+  activo = ndb.TextProperty()
 
 class MainHandler(webapp2.RequestHandler):
   def get(self):
@@ -74,19 +74,21 @@ class Registrar (webapp2.RequestHandler):
 		else:
 		 usuarios.usuario = self.request.get('nombre')
 		 usuarios.contra = self.request.get('contra')
+		 usuarios.activo = '0'
 		 usuarios.put()
 		 self.redirect('/')
 		
 class Loguear (webapp2.RequestHandler):
 	def post(self):
 		usuarios = Usuarios(parent=album_key)
-		lusuarios = ndb.gql('SELECT * '
-                        'FROM Usuarios '
-                        'WHERE ANCESTOR IS :1 ',
-                        album_key)
+		#lusuarios = ndb.gql('SELECT * '
+        #                'FROM Usuarios '
+        #                'WHERE ANCESTOR IS :1 ',
+        #                album_key)
+		lusuarios = Usuarios.query()
 		red = 0
 		for usuarios in lusuarios:
-		  if cgi.escape(usuarios.usuario) == self.request.get('nombre') and cgi.escape(usuarios.contra) == self.request.get('contra'):
+		  if cgi.escape(usuarios.usuario) == self.request.get('nombre') and cgi.escape(usuarios.contra) == self.request.get('contra') and cgi.escape(usuarios.activo) == 1:
 		    red = 1
 		    break
 		if red == 1:
