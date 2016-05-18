@@ -39,7 +39,7 @@
                                     <td>{{album.nombre}}</td>
                                     <td>{{album.usuario}}</td>
                                     <td class="edit-actions">
-                                        <button type="button" data-toggle="modal" data-target="#delete-album-modal" class="btn btn-xs btn-danger glyphicon glyphicon-remove delete-movie-quote">
+                                        <button type="button" data-toggle="modal" data-target="#delete-album-modal" class="btn btn-xs btn-danger glyphicon glyphicon-remove delete-album">
                                             <div class="hidden entity-key">{{ album.key.urlsafe() }}</div>
                                         </button>
                                     </td>
@@ -62,7 +62,7 @@
                         </button>
                         <h4 class="modal-title" id="myModalLabel1">Delete Album</h4>
                     </div>
-                    <form action="/deletequote" method="POST" class="form-horizontal" role="form">
+                    <form action="/deleteAlbum" method="POST" class="form-horizontal" role="form">
                         <input type="text" name="entity_key" class="hidden">
                         <div class="modal-body">
                             <p>Are you sure you wish to delete this album?</p>

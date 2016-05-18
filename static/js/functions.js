@@ -16,8 +16,17 @@ rh.mq = rh.mq || {}; // MovieQuote(mq) namespace in RoseHulman(rs) namespace
 						// overlapping
 
 rh.mq.enableButtons = function() {
+	$('.delete-album').click ( function() {
+		entityKey = $(this).find(".entity-key").html();
+		$("#delete-album-modal input[name=entity_key]").val(entityKey).prop("disabled", false);
+	});
 	
+	$('.delete-image').click ( function() {
+		entityKey = $(this).find(".entity-key").html();
+		$("#delete-image-modal input[name=entity_key]").val(entityKey).prop("disabled", false);
+	});
 }
+
 
 rh.mq.enableInfo = function() {
 	

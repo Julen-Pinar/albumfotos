@@ -16,12 +16,14 @@
 #
 from base64 import b64encode
 import cgi
+import logging
 import os
 import re
 
 from google.appengine.ext import ndb
 import jinja2
 import webapp2
+import base64
 
 import session_module
 
@@ -30,6 +32,7 @@ import session_module
 jinja_env = jinja2.Environment(
   loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
   autoescape=True)
+jinja_env.filters['b64encode'] = base64.b64encode
 
 album_key = ndb.Key('Albumfotos', 'hads1015')
 
@@ -84,7 +87,7 @@ class Registrar (webapp2.RequestHandler):
 class Loguear (session_module.BaseSessionHandler):
     def post(self):
         usuarios = Usuarios(parent=album_key)
-        lusuarios = Usuarios.query(ancestor=album_key)
+        lusuarios = Usuarios.query(ancestor=album_key).order(-Usuarios.last_touch_date_time)
         red = 0
         for usuarios in lusuarios:
             if cgi.escape(usuarios.usuario) == self.request.get('nombre') and cgi.escape(usuarios.contra) == self.request.get('contra') and cgi.escape(usuarios.activo) == '1':
@@ -105,7 +108,7 @@ class Loguear (session_module.BaseSessionHandler):
 class LoginUserHandler(session_module.BaseSessionHandler):
     def get(self):
         templateUser = jinja_env.get_template("templates/user_base.html")
-        lalbumes = Albumes.query(ancestor=album_key)
+        lalbumes = Albumes.query(ancestor=album_key).order(-Albumes.last_touch_date_time)
         self.response.write(templateUser.render({'albumes' : lalbumes }))
 
 class LoginAdminHandler(webapp2.RequestHandler):
@@ -116,13 +119,13 @@ class LoginAdminHandler(webapp2.RequestHandler):
 class AdminUserHandler(webapp2.RequestHandler):
     def get(self):
         templateAdminUser = jinja_env.get_template("templates/admin_user.html")
-        lusuarios = Usuarios.query(ancestor=album_key)
+        lusuarios = Usuarios.query(ancestor=album_key).order(-Usuarios.last_touch_date_time)
         self.response.write(templateAdminUser.render({'users':lusuarios}))
 
 class AdminAlbumHandler(webapp2.RequestHandler):
     def get(self):
         templateAdminAlbum = jinja_env.get_template("templates/admin_album.html")
-        lalbumes = Albumes.query(ancestor=album_key)
+        lalbumes = Albumes.query(ancestor=album_key).order(-Albumes.last_touch_date_time)
         #self.response.write("<h1>Admin: Lista de albumes </h1>  <br/><br/><a href=/ladmin>Menu Admin</a>")
         self.response.write(templateAdminAlbum.render({'albumes' : lalbumes}))
         
@@ -133,36 +136,32 @@ class CreateAlbumHandler(session_module.BaseSessionHandler):
         albumes.nombre = self.request.get('nombre')
         albumes.descripcion = self.request.get('descripcion')
         albumes.put()
-        self.redirect('luser')
+        self.redirect(self.request.referer)
         
 class EditAlbumHandler(session_module.BaseSessionHandler):
-    def post(self):
-        #self.response.out.write("album: %s" % self.request.get('keyalbum'))
-        album_entity_key = ndb.Key(urlsafe=self.request.get('keyalbum'))
-        album = album_entity_key.get()
-        self.response.out.write("album: %s <br/>" % album.nombre)
-        lfotos = Fotos.query()
-        for foto in lfotos:
-            if foto.albumid == self.request.get('keyalbum'):
-                image = b64encode(foto.data)
-                self.response.out.write("<blockquote><br/>Titulo: %s</blockquote>" % cgi.escape(foto.titulo))
-                self.response.out.write("<blockquote><br/>Etiqueta: %s</blockquote>" % cgi.escape(foto.etiqueta))
-                #self.response.headers['Content-Type'] = 'image/gif'
-                #self.response.out.write(b64encode(foto.data))
-                #self.response.out.write(foto.data.encode('base64'))
-                #img_b64 = foto.data.getvalue().encode("base64").strip()
-                self.response.write("<img src='data:image/png;base64,%s'/>" % foto.data.encode('base64'))
-            self.response.out.write("<br/>Subir una foto:")
-            self.response.out.write("""
-			    <form action="/addpicture" method="post" enctype="multipart/form-data">
-				    <input type="hidden" class="hidden" name="keyalbum" value= """ + self.request.get('keyalbum') +""" />
-				<div>image: <input type = "file" name = "image"></div> <br/>
-				<div>Titulo: <textarea name="titulofoto" rows="1" cols="30"></textarea></div>
-				<div>Introduce las etiquetas separadas por espacios: <textarea name="etiquetas" rows="1" cols="30"></textarea></div>
-				<div><input type="submit" value="Agregar"></div> <br/>
-			</form>
-		</body>
-	</html>""")
+    def get(self):
+        listaFotosId = []
+        album = Albumes.get_by_id(int(self.request.get_all('album')[0]), album_key)
+        if not album:
+            self.response.write("Error: Album no encontrado! Que andas buscando por aqui!? Aqui Blind SQL Injection no eh Juan! Aqui BLIND SQLI no! ")
+        else:
+            lfotos = Fotos.query(ancestor=album_key).order(-Fotos.last_touch_date_time)
+            for foto in lfotos:
+                if foto.albumid == str(album.key.id()):
+                    logging.info("HEY")
+                    listaFotosId.append(foto)
+                    #image = b64encode(foto.data)
+                    #self.response.out.write("<blockquote><br/>Titulo: %s</blockquote>" % cgi.escape(foto.titulo))
+                    #self.response.out.write("<blockquote><br/>Etiqueta: %s</blockquote>" % cgi.escape(foto.etiqueta))
+                    #self.response.headers['Content-Type'] = 'image/gif'
+                    #self.response.out.write(b64encode(foto.data))
+                    #self.response.out.write(foto.data.encode('base64'))
+                    #img_b64 = foto.data.getvalue().encode("base64").strip()
+                    #self.response.write("<img src='data:image/png;base64,%s'/>" % foto.data.encode('base64'))
+            templateAlbumBase = jinja_env.get_template("templates/album_base.html")
+            #self.response.write("<h1>Admin: Lista de albumes </h1>  <br/><br/><a href=/ladmin>Menu Admin</a>")
+            self.response.write(templateAlbumBase.render({'album' : album, 'fotos': listaFotosId}))
+            
 
 
 
@@ -174,11 +173,11 @@ class AddPictureHandler(webapp2.RequestHandler):
         fotos.albumid = self.request.get('keyalbum')
         fotos.etiqueta = self.request.get('etiquetas')
         fotos.put()
-        self.redirect('luser')
+        self.redirect(self.request.referer)
 
 class PictureFinderHandler(session_module.BaseSessionHandler):
     def post(self):
-        lfotos = Fotos.query()
+        lfotos = Fotos.query(ancestor=album_key).order(-Fotos.last_touch_date_time)
         for foto in lfotos:
             if self.request.get('etiqueta') in foto.etiqueta:
                 image = b64encode(foto.data)
@@ -190,6 +189,18 @@ class LogoutHandler(session_module.BaseSessionHandler):
     def get(self): 
         self.redirect("/")
 
+class DeleteAlbumHandler(session_module.BaseSessionHandler):
+    def post(self):
+        album_entity_keyDEL = ndb.Key(urlsafe=self.request.get('entity_key'))
+        album_entity_keyDEL.delete()
+        self.redirect(self.request.referer)
+        
+class DeleteImageHandler(session_module.BaseSessionHandler):
+    def post(self):
+        image_entity_keyDEL = ndb.Key(urlsafe=self.request.get('entity_key'))
+        image_entity_keyDEL.delete()
+        self.redirect(self.request.referer)
+        
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
 	('/reg', RegistroHandler),
@@ -204,5 +215,7 @@ app = webapp2.WSGIApplication([
 	('/addpicture', AddPictureHandler),
 	('/buscafotos', PictureFinderHandler),
     ('/logout', LogoutHandler),
+    ('/deleteAlbum', DeleteAlbumHandler),
+    ('/deleteImage', DeleteImageHandler),
 ], 	config=session_module.myconfig_dict, 
 	debug=True)

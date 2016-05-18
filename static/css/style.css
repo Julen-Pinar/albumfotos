@@ -26,3 +26,6 @@ th:nth-child(1) {
 .info {
     padding: 10px;
 }
+.photo_name {
+	font-size: 1.5em;
+}
