@@ -88,16 +88,23 @@ class Loguear (webapp2.RequestHandler):
 		lusuarios = Usuarios.query()
 		red = 0
 		for usuarios in lusuarios:
-		  if cgi.escape(usuarios.usuario) == self.request.get('nombre') and cgi.escape(usuarios.contra) == self.request.get('contra') and cgi.escape(usuarios.activo) == 1:
-		    red = 1
+		  if cgi.escape(usuarios.usuario) == self.request.get('nombre') and cgi.escape(usuarios.contra) == self.request.get('contra') and cgi.escape(usuarios.activo) == '1':
+		    if self.request.get('nombre')=='admin':
+		      red = 2
+		    else:
+		      red = 1
 		    break
 		if red == 1:
 		  self.redirect('luser')
 		elif red == 0:
-		  self.redirect('/')
+		  self.response.out.write("red 0")
+		elif red == 2:
+		  self.redirect('ladmin')
+		  
 class LoginUserHandler(webapp2.RequestHandler):
 	def get(self):
 		self.response.write("<h1>Pagina de Usuario</h1> <br/> <a href= '/'> Principal </a>")
+		  
 		
 class LoginAdminHandler(webapp2.RequestHandler):
 	def get(self):
@@ -105,7 +112,23 @@ class LoginAdminHandler(webapp2.RequestHandler):
 		
 class AdminUserHandler(webapp2.RequestHandler):
 	def get(self):
-		self.response.write("<h1>Admin: Lista de usuarios </h1> <br/><br/><a href=/ladmin>Menu Admin</a>")
+		self.response.write("<html><body><h1>Admin: Lista de usuarios </h1> <br/><br/><a href=/ladmin>Menu Admin</a>")
+		lusuarios = Usuarios.query()
+		for usuarios in lusuarios:
+		  self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.usuario))
+		  self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.contra))
+		  self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.activo))
+		  self.response.out.write("""
+			<form action="/activar" method="post">
+				<!--<div>Usuario a Activar: <textarea name="anombre" rows="1" cols="30"></textarea></div>-->
+				<div><input type="submit" value="Activar"></div> <br/>
+			</form>
+			<form action="/borrarUsuario" method="post">
+				<!--<div>Usuario a Borrar: <textarea name="bnombre" rows="1" cols="30"></textarea></div>-->
+				<div><input type="submit" value="Borrar"></div> <br/>
+			</form>
+		</body>
+	</html>""")
 
 class AdminAlbumHandler(webapp2.RequestHandler):
 	def get(self):
