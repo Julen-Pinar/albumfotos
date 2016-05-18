@@ -125,12 +125,28 @@ class LoginUserHandler(session_module.BaseSessionHandler):
 		  if albumes.usuario == self.session['susuario']:
 		    self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(albumes.usuario))
 		    self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(albumes.nombre))
-		    
+		    self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(str(albumes.key.urlsafe())))
+		    key = (str(albumes.key.urlsafe()))
+		    self.response.out.write("""
+			<form action="/editaralbum" method="post">
+				<input type="hidden" class="hidden" name="keyalbum" value= """ + key +""" />
+				<div><input type="submit" value="editar"></div> <br/>
+			</form>
+			<form action="/borrarAlbum" method="post">
+				<!--<div>Borrar Album: <textarea name="bnombre" rows="1" cols="30"></textarea></div>-->
+				<div><input type="submit" value="Borrar"></div> <br/>
+			</form>
+		</body>
+	</html>""")
 		self.response.write("<a href= '/'> Principal </a>")
 		self.response.out.write("""
 			<form action="/crearAlbum" method="post">
 				<div>Nombre del album: <textarea name="nombrealbum" rows="1" cols="30"></textarea></div>
 				<div><input type="submit" value="Anadir album"></div> <br/>
+			</form>
+			<form action="/buscafotos" method="post">
+				<div>Etiqueta de la foto: <textarea name="etiqueta" rows="1" cols="30"></textarea></div>
+				<div><input type="submit" value="Buscar"></div> <br/>
 			</form>
 		</body>
 	</html>""")
@@ -170,6 +186,14 @@ class CreateAlbumHandler(webapp2.RequestHandler):
 		albumes.nombre = self.request.get('nombrealbum')
 		albumes.put()
 		self.redirect('luser')
+		
+class EditAlbumHandler(session_module.BaseSessionHandler):
+	def post(self):
+		#self.response.out.write("album: %s" % self.request.get('keyalbum'))
+		album_entity_key = ndb.Key(urlsafe=self.request.get('keyalbum'))
+		album = album_entity_key.get()
+		self.response.out.write("album: %s" % album.nombre)
+		
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
@@ -181,5 +205,6 @@ app = webapp2.WSGIApplication([
 	('/registro', Registrar),
 	('/logueo', Loguear),
 	('/crearAlbum', CreateAlbumHandler),
+	('/editaralbum', EditAlbumHandler),
 ], 	config=session_module.myconfig_dict, 
 	debug=True)
