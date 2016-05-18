@@ -17,9 +17,10 @@
 import webapp2
 import cgi
 import re
+import session_module
 
 from google.appengine.ext import ndb
-#from webapp2_extras import sessions
+from webapp2_extras import sessions
 
 album_key = ndb.Key('Albumfotos', 'hads1015')
 
@@ -90,7 +91,7 @@ class Registrar (webapp2.RequestHandler):
 		 usuarios.put()
 		 self.redirect('/')
 		
-class Loguear (webapp2.RequestHandler):
+class Loguear (session_module.BaseSessionHandler):
 	def post(self):
 		#self.session_store = sessions.get_store(request=self.request)
 		usuarios = Usuarios(parent=album_key)
@@ -102,13 +103,13 @@ class Loguear (webapp2.RequestHandler):
 		red = 0
 		for usuarios in lusuarios:
 		  if cgi.escape(usuarios.usuario) == self.request.get('nombre') and cgi.escape(usuarios.contra) == self.request.get('contra') and cgi.escape(usuarios.activo) == '1':
-		    if self.request.get('nombre')=='admin':
+		    if self.request.get('nombre')=='admin000@ikasle.ehu.es':
 		      red = 2
 		    else:
 		      red = 1
 		    break
-		if red == 1:
-		  #self.session['susuario'] = self.request.get('nombre')
+		if red == 1: 
+		  self.session['susuario'] = self.request.get('nombre')
 		  self.redirect('luser')
 		elif red == 0:
 		  self.response.out.write("red 0")
@@ -116,9 +117,16 @@ class Loguear (webapp2.RequestHandler):
 		  #self.session['susuario'] = self.request.get('nombre')
 		  self.redirect('ladmin')
 		  
-class LoginUserHandler(webapp2.RequestHandler):
+class LoginUserHandler(session_module.BaseSessionHandler):
 	def get(self):
-		self.response.write("<html><body><h1>Pagina de Usuario</h1> <br/> <a href= '/'> Principal </a>")
+		self.response.write("<html><body><h1>Pagina de Usuario</h1> <br/>")
+		lalbumes = Albumes.query()
+		for albumes in lalbumes:
+		  if albumes.usuario == self.session['susuario']:
+		    self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(albumes.usuario))
+		    self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(albumes.nombre))
+		    
+		self.response.write("<a href= '/'> Principal </a>")
 		self.response.out.write("""
 			<form action="/crearAlbum" method="post">
 				<div>Nombre del album: <textarea name="nombrealbum" rows="1" cols="30"></textarea></div>
@@ -158,7 +166,7 @@ class AdminAlbumHandler(webapp2.RequestHandler):
 class CreateAlbumHandler(webapp2.RequestHandler):
 	def post(self):
 		albumes = Albumes(parent=album_key)
-		#albumes.usuario = self.session.get('susuario')
+		albumes.usuario = self.session['susuario']
 		albumes.nombre = self.request.get('nombrealbum')
 		albumes.put()
 		self.redirect('luser')
@@ -173,4 +181,5 @@ app = webapp2.WSGIApplication([
 	('/registro', Registrar),
 	('/logueo', Loguear),
 	('/crearAlbum', CreateAlbumHandler),
-], debug=True)
+], 	config=session_module.myconfig_dict, 
+	debug=True)
