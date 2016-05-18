@@ -19,6 +19,7 @@ import cgi
 import re
 
 from google.appengine.ext import ndb
+#from webapp2_extras import sessions
 
 album_key = ndb.Key('Albumfotos', 'hads1015')
 
@@ -26,6 +27,17 @@ class Usuarios(ndb.Model):
   usuario = ndb.TextProperty()
   contra = ndb.TextProperty()
   activo = ndb.TextProperty()
+
+class Albumes(ndb.Model):
+  usuario = ndb.TextProperty()
+  nombre = ndb.TextProperty()
+
+class Fotos(ndb.Model):
+  titulo = ndb.TextProperty()
+  albumid = ndb.TextProperty()
+  etiqueta = ndb.TextProperty()
+  data = ndb.TextProperty()
+
 
 class MainHandler(webapp2.RequestHandler):
   def get(self):
@@ -80,6 +92,7 @@ class Registrar (webapp2.RequestHandler):
 		
 class Loguear (webapp2.RequestHandler):
 	def post(self):
+		#self.session_store = sessions.get_store(request=self.request)
 		usuarios = Usuarios(parent=album_key)
 		#lusuarios = ndb.gql('SELECT * '
         #                'FROM Usuarios '
@@ -95,16 +108,24 @@ class Loguear (webapp2.RequestHandler):
 		      red = 1
 		    break
 		if red == 1:
+		  #self.session['susuario'] = self.request.get('nombre')
 		  self.redirect('luser')
 		elif red == 0:
 		  self.response.out.write("red 0")
 		elif red == 2:
+		  #self.session['susuario'] = self.request.get('nombre')
 		  self.redirect('ladmin')
 		  
 class LoginUserHandler(webapp2.RequestHandler):
 	def get(self):
-		self.response.write("<h1>Pagina de Usuario</h1> <br/> <a href= '/'> Principal </a>")
-		  
+		self.response.write("<html><body><h1>Pagina de Usuario</h1> <br/> <a href= '/'> Principal </a>")
+		self.response.out.write("""
+			<form action="/crearAlbum" method="post">
+				<div>Nombre del album: <textarea name="nombrealbum" rows="1" cols="30"></textarea></div>
+				<div><input type="submit" value="Anadir album"></div> <br/>
+			</form>
+		</body>
+	</html>""")
 		
 class LoginAdminHandler(webapp2.RequestHandler):
 	def get(self):
@@ -133,6 +154,14 @@ class AdminUserHandler(webapp2.RequestHandler):
 class AdminAlbumHandler(webapp2.RequestHandler):
 	def get(self):
 		self.response.write("<h1>Admin: Lista de albumes </h1>  <br/><br/><a href=/ladmin>Menu Admin</a>")
+		
+class CreateAlbumHandler(webapp2.RequestHandler):
+	def post(self):
+		albumes = Albumes(parent=album_key)
+		#albumes.usuario = self.session.get('susuario')
+		albumes.nombre = self.request.get('nombrealbum')
+		albumes.put()
+		self.redirect('luser')
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
@@ -143,4 +172,5 @@ app = webapp2.WSGIApplication([
 	('/aalbum', AdminAlbumHandler),
 	('/registro', Registrar),
 	('/logueo', Loguear),
+	('/crearAlbum', CreateAlbumHandler),
 ], debug=True)
