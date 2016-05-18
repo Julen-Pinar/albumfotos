@@ -101,15 +101,15 @@ class LoginUserHandler(webapp2.RequestHandler):
 		
 class LoginAdminHandler(webapp2.RequestHandler):
 	def get(self):
-		self.response.write("<h1>Pagina de Administrador</h1> <br/> <a href= '/'> Principal </a>")
+		self.response.write("<h1>Pagina de Administrador</h1> <br/> <a href=/auser> Gestionar Usuarios </a> <br/> <a href=/aalbum> Gestionar albumes </a> <br/> <a href= '/'> Principal </a>")
 		
 class AdminUserHandler(webapp2.RequestHandler):
 	def get(self):
-		self.response.write("<h1>Admin: Lista de usuarios </h1>")
+		self.response.write("<h1>Admin: Lista de usuarios </h1> <br/><br/><a href=/ladmin>Menu Admin</a>")
 
 class AdminAlbumHandler(webapp2.RequestHandler):
 	def get(self):
-		self.response.write("<h1>Admin: Lista de albumes </h1>")
+		self.response.write("<h1>Admin: Lista de albumes </h1>  <br/><br/><a href=/ladmin>Menu Admin</a>")
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
