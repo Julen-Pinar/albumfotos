@@ -37,7 +37,7 @@ class Fotos(ndb.Model):
   titulo = ndb.TextProperty()
   albumid = ndb.TextProperty()
   etiqueta = ndb.TextProperty()
-  data = ndb.TextProperty()
+  data = ndb.BlobProperty()
 
 
 class MainHandler(webapp2.RequestHandler):
@@ -179,7 +179,7 @@ class AdminAlbumHandler(webapp2.RequestHandler):
 	def get(self):
 		self.response.write("<h1>Admin: Lista de albumes </h1>  <br/><br/><a href=/ladmin>Menu Admin</a>")
 		
-class CreateAlbumHandler(webapp2.RequestHandler):
+class CreateAlbumHandler(session_module.BaseSessionHandler):
 	def post(self):
 		albumes = Albumes(parent=album_key)
 		albumes.usuario = self.session['susuario']
@@ -192,8 +192,32 @@ class EditAlbumHandler(session_module.BaseSessionHandler):
 		#self.response.out.write("album: %s" % self.request.get('keyalbum'))
 		album_entity_key = ndb.Key(urlsafe=self.request.get('keyalbum'))
 		album = album_entity_key.get()
-		self.response.out.write("album: %s" % album.nombre)
+		self.response.out.write("album: %s <br/>" % album.nombre)
+		self.response.out.write("Subir una foto:")
+		self.response.out.write("""
+			<form action="/addpicture" method="post" enctype="multipart/form-data">
+				<input type="hidden" class="hidden" name="keyalbum" value= """ + self.request.get('keyalbum') +""" />
+				<div>image: <input type = "file" name = "image"></div> <br/>
+				<div>Titulo: <textarea name="titulofoto" rows="1" cols="30"></textarea></div>
+				<div>Introduce las etiquetas separadas por espacios: <textarea name="etiquetas" rows="1" cols="30"></textarea></div>
+				<div><input type="submit" value="Agregar"></div> <br/>
+			</form>
+		</body>
+	</html>""")
+
+
+	
+class AddPictureHandler(webapp2.RequestHandler):
+    def post(self):
+        fotos = Fotos(parent=album_key)
+        fotos.titulo = self.request.get('titulofoto')
+        fotos.data = str(self.request.get('image'))
+        fotos.albumid = self.request.get('keyalbum')
+        fotos.etiqueta = self.request.get('etiquetas')
+        fotos.put()
+        self.redirect('luser')
 		
+
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
@@ -206,5 +230,6 @@ app = webapp2.WSGIApplication([
 	('/logueo', Loguear),
 	('/crearAlbum', CreateAlbumHandler),
 	('/editaralbum', EditAlbumHandler),
+	('/addpicture', AddPictureHandler),
 ], 	config=session_module.myconfig_dict, 
 	debug=True)
