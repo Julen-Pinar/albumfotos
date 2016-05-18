@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>AlbumFotos</title>
+        <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+        <!-- Bootstrap -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+        <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+        <![endif]-->
+    </head>
+    <body>
+        {% include "templates/menus/admin.html" %}
+        <div class="container">
+            <div class="row">
+                <h1>Admin: Lista de usuarios </h1>
+                <br>
+                <div class="container">
+                    <div class="table-wrapper">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                        {% for user in users %} 
+                                <tr>
+                                    <td>{{user.usuario}}</td>
+                                    <td class="edit-actions">
+                                    {% if user.activo == "0" %}
+                                        <button type="button" data-toggle="modal" data-target="#activate-user-modal" class="btn btn-xs btn-success glyphicon glyphicon-ok-circle edit-movie-quote"  title="Activate User">
+                                            <div class="hidden entity-key">{{ user.key.urlsafe() }}</div>
+                                        </button>
+                                    {% else %}
+                                        <button type="button" data-toggle="modal" data-target="#deactivate-user-modal" class="btn btn-xs btn-danger glyphicon glyphicon-remove-circle edit-movie-quote" title="Deactivate User">
+                                            <div class="hidden entity-key">{{ user.key.urlsafe() }}</div>
+                                        </button>
+                                    {% endif %}
+                                        <button type="button" data-toggle="modal" data-target="#delete-user-modal" class="btn btn-xs btn-danger glyphicon glyphicon-remove delete-movie-quote" title="Delete User">
+                                            <div class="hidden entity-key">{{ user.key.urlsafe() }}</div>
+                                        </button>
+                                    </td>
+                                </tr>
+                        {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <br><a href="/ladmin">Menu Admin</a>
+            </div>
+        </div>
+        <!-- Activate Modal -->
+        <div class="modal fade" id="activate-user-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">×</span><span class="sr-only">Close</span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Activate User</h4>
+                    </div>
+                    <form action="/activate" method="POST" class="form-horizontal" role="form">
+                        <input type="text" name="entity_key" class="hidden">
+                        <div class="modal-body">
+                        <p>Are you sure you want to activate this user?</p>
+                        <!--    <div class="form-group">
+                                <label for="quote" class="col-sm-2 control-label">Nombre</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="quote" name="quote" placeholder="Nombre del Album">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="movie" class="col-sm-2 control-label">Descripción</label>
+                                <div class="col-sm-10">
+                                    <textarea class="form-control" id="movie" name="movie" placeholder="Descripción del Album">
+                                    </textarea>
+                                </div>
+                            </div>-->
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Activate</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- DeActivate Modal -->
+        <div class="modal fade" id="deactivate-user-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel3" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">×</span><span class="sr-only">Close</span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel3">Deactivate User</h4>
+                    </div>
+                    <form action="/activate" method="POST" class="form-horizontal" role="form">
+                        <input type="text" name="entity_key" class="hidden">
+                        <div class="modal-body">
+                        <p>Are you sure you want to deactivate this user?</p>
+                        <!--    <div class="form-group">
+                                <label for="quote" class="col-sm-2 control-label">Nombre</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="quote" name="quote" placeholder="Nombre del Album">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="movie" class="col-sm-2 control-label">Descripción</label>
+                                <div class="col-sm-10">
+                                    <textarea class="form-control" id="movie" name="movie" placeholder="Descripción del Album">
+                                    </textarea>
+                                </div>
+                            </div>-->
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Deactivate</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Delete Modal -->
+        <div class="modal fade" id="delete-user-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">×</span><span class="sr-only">Close</span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel1">Delete User</h4>
+                    </div>
+                    <form action="/deletequote" method="POST" class="form-horizontal" role="form">
+                        <input type="text" name="entity_key" class="hidden">
+                        <div class="modal-body">
+                            <p>Are you sure you wish to delete this user?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <!-- Compiled and minified Bootstrap JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <script src="/static/js/functions.js"></script>
+    </body>
+</html>

@@ -1,0 +1,28 @@
+body {
+    padding-top:70px
+}
+
+textarea {
+    resize:none;
+}
+
+/* Only use table-wrapper on screen >600px */ 
+@media (min-width: 600px) {
+    .table-wrapper {
+    padding: 10px 30px 5px;
+    border:2px solid #ccc;
+    border-radius: 5px;
+    box-shadow: #ddd 2px 2px 0px;
+    }
+}
+
+th {
+    font-size: 1.5em;
+}
+
+th:nth-child(1) {
+    width:80%;
+}
+.info {
+    padding: 10px;
+}

@@ -14,201 +14,148 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import webapp2
+from base64 import b64encode
 import cgi
+import os
 import re
-import session_module
 
 from google.appengine.ext import ndb
-from webapp2_extras import sessions
-from base64 import b64encode
+import jinja2
+import webapp2
+
+import session_module
+
+
+# Jinja Environment instance necessary to use Jinja templates.
+jinja_env = jinja2.Environment(
+  loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+  autoescape=True)
 
 album_key = ndb.Key('Albumfotos', 'hads1015')
 
 class Usuarios(ndb.Model):
-  usuario = ndb.TextProperty()
-  contra = ndb.TextProperty()
-  activo = ndb.TextProperty()
+    usuario = ndb.TextProperty()
+    contra = ndb.TextProperty()
+    activo = ndb.TextProperty()
+    last_touch_date_time = ndb.DateTimeProperty(auto_now_add=True)
 
 class Albumes(ndb.Model):
-  usuario = ndb.TextProperty()
-  nombre = ndb.TextProperty()
+    usuario = ndb.TextProperty()
+    nombre = ndb.TextProperty()
+    descripcion = ndb.TextProperty()
+    last_touch_date_time = ndb.DateTimeProperty(auto_now_add=True)
 
 class Fotos(ndb.Model):
-  titulo = ndb.TextProperty()
-  albumid = ndb.TextProperty()
-  etiqueta = ndb.TextProperty()
-  data = ndb.BlobProperty()
-
+    titulo = ndb.TextProperty()
+    albumid = ndb.TextProperty()
+    etiqueta = ndb.TextProperty()
+    data = ndb.BlobProperty()
+    last_touch_date_time = ndb.DateTimeProperty(auto_now_add=True)
 
 class MainHandler(webapp2.RequestHandler):
-  def get(self):
-    self.response.out.write("<html><body><h1>Pagina de Inicio</h1><br/><br/>")
-    #lusuarios = ndb.gql('SELECT * '
-                        #'FROM Usuarios '
-                        #'WHERE ANCESTOR IS :1 ',
-                        #album_key)
-    #for usuarios in lusuarios:
-      #self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.usuario))
-      #self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.contra))
-    self.response.out.write("""
-			<form action="/logueo" method="post">
-				<div>Email: <textarea name="nombre" rows="1" cols="30"></textarea></div>
-				<div>Contrasena: <textarea name="contra" rows="1" cols="30"></textarea></div>
-				<div><input type="submit" value="Login"></div> <br/>
-				 <a href=reg> Registro </a> <br/>
-			</form>
-		</body>
-	</html>""")
+    def get(self):
+        templateBase = jinja_env.get_template("templates/base.html")
+        self.response.write(templateBase.render({}))
 
 class RegistroHandler(webapp2.RequestHandler):
-	def get(self):
-		self.response.out.write("<html><body><h1>Pagina de Registro</h1><br/> Introduce los datos <br/>")
-		self.response.out.write("""
-			<form action="/registro" method="post">
-				<div>Email: <textarea name="nombre" rows="1" cols="30"></textarea></div>
-				<div>Contra: <textarea name="contra" rows="1" cols="30"></textarea></div>
-				<div><input type="submit" value="Registrarse"></div> <br/>
-				 <a href= '/'> Principal </a> <br/>
-			</form>
-		</body>
-	</html>""")
+    def get(self):
+        templateRegistro = jinja_env.get_template("templates/registro.html")
+        self.response.out.write(templateRegistro.render({}))
+
 
 class Registrar (webapp2.RequestHandler):
-	def post(self):
-		usuarios = Usuarios(parent=album_key)
-		pattern1 = re.compile("^[a-zA-Z]+\d{3}@ikasle.ehu(.es|.eus)$")
-		pattern2 = re.compile("^.{6,}$")
-		if not pattern1.match(self.request.get('nombre')):
-		  self.response.out.write("Debes proporcionar un email valido.")
-		  self.response.write(" <br/> <a href= reg> Volver al registro </a>")
-		elif not pattern2.match(self.request.get('contra')):
-		  self.response.out.write("La contrasena debe tener mas de 6 caracteres.")
-		  self.response.write(" <br/> <a href= reg> Volver al registro </a>")
-		else:
-		 usuarios.usuario = self.request.get('nombre')
-		 usuarios.contra = self.request.get('contra')
-		 usuarios.activo = '0'
-		 usuarios.put()
-		 self.redirect('/')
-		
+    def post(self):
+        usuarios = Usuarios(parent=album_key)
+        pattern1 = re.compile("^[a-zA-Z]+\d{3}@ikasle.ehu(.es|.eus)$")
+        pattern2 = re.compile("^.{6,}$")
+        if not pattern1.match(self.request.get('nombre')):
+            self.redirect('/reg?error=Debes proporcionar un email valido.')
+            #self.response.out.write(templateRegistro.render({'error': "Debes proporcionar un email valido."}))
+        elif not pattern2.match(self.request.get('contra')):
+            self.redirect('/reg?error=La contrasena debe tener mas de 6 caracteres.')
+            #self.response.out.write(templateRegistro.render({'error': "La contrasena debe tener mas de 6 caracteres."}))
+        else:
+            usuarios.usuario = self.request.get('nombre')
+            usuarios.contra = self.request.get('contra')
+            usuarios.activo = '0'
+            usuarios.put()
+            self.redirect('/?success=Registro realizado con exito.')
+
 class Loguear (session_module.BaseSessionHandler):
-	def post(self):
-		#self.session_store = sessions.get_store(request=self.request)
-		usuarios = Usuarios(parent=album_key)
-		#lusuarios = ndb.gql('SELECT * '
-        #                'FROM Usuarios '
-        #                'WHERE ANCESTOR IS :1 ',
-        #                album_key)
-		lusuarios = Usuarios.query()
-		red = 0
-		for usuarios in lusuarios:
-		  if cgi.escape(usuarios.usuario) == self.request.get('nombre') and cgi.escape(usuarios.contra) == self.request.get('contra') and cgi.escape(usuarios.activo) == '1':
-		    if self.request.get('nombre')=='admin000@ikasle.ehu.es':
-		      red = 2
-		    else:
-		      red = 1
-		    break
-		if red == 1: 
-		  self.session['susuario'] = self.request.get('nombre')
-		  self.redirect('luser')
-		elif red == 0:
-		  self.response.out.write("red 0")
-		elif red == 2:
-		  #self.session['susuario'] = self.request.get('nombre')
-		  self.redirect('ladmin')
-		  
+    def post(self):
+        usuarios = Usuarios(parent=album_key)
+        lusuarios = Usuarios.query(ancestor=album_key)
+        red = 0
+        for usuarios in lusuarios:
+            if cgi.escape(usuarios.usuario) == self.request.get('nombre') and cgi.escape(usuarios.contra) == self.request.get('contra') and cgi.escape(usuarios.activo) == '1':
+                if self.request.get('nombre')=='admin000@ikasle.ehu.eus' or self.request.get('nombre')=='admin000@ikasle.ehu.es':
+                    red = 2
+                else:
+                    red = 1
+                    break
+        if red == 1: 
+            self.session['susuario'] = self.request.get('nombre')
+            self.redirect('luser')
+        elif red == 0:
+            self.redirect('/?error=Usuario invalido o no activado.')
+        elif red == 2:
+            self.session['susuario'] = self.request.get('nombre')
+            self.redirect('ladmin')
+  
 class LoginUserHandler(session_module.BaseSessionHandler):
-	def get(self):
-		self.response.write("<html><body><h1>Pagina de Usuario</h1> <br/>")
-		lalbumes = Albumes.query()
-		for albumes in lalbumes:
-		  if albumes.usuario == self.session['susuario']:
-		    self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(albumes.usuario))
-		    self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(albumes.nombre))
-		    self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(str(albumes.key.urlsafe())))
-		    key = (str(albumes.key.urlsafe()))
-		    self.response.out.write("""
-			<form action="/editaralbum" method="post">
-				<input type="hidden" class="hidden" name="keyalbum" value= """ + key +""" />
-				<div><input type="submit" value="editar"></div> <br/>
-			</form>
-			<form action="/borrarAlbum" method="post">
-				<!--<div>Borrar Album: <textarea name="bnombre" rows="1" cols="30"></textarea></div>-->
-				<div><input type="submit" value="Borrar"></div> <br/>
-			</form>
-		</body>
-	</html>""")
-		self.response.write("<a href= '/'> Principal </a>")
-		self.response.out.write("""
-			<form action="/crearAlbum" method="post">
-				<div>Nombre del album: <textarea name="nombrealbum" rows="1" cols="30"></textarea></div>
-				<div><input type="submit" value="Anadir album"></div> <br/>
-			</form>
-			<form action="/buscafotos" method="post">
-				<div>Etiqueta de la foto: <textarea name="etiqueta" rows="1" cols="30"></textarea></div>
-				<div><input type="submit" value="Buscar"></div> <br/>
-			</form>
-		</body>
-	</html>""")
-		
+    def get(self):
+        templateUser = jinja_env.get_template("templates/user_base.html")
+        lalbumes = Albumes.query(ancestor=album_key)
+        self.response.write(templateUser.render({'albumes' : lalbumes }))
+
 class LoginAdminHandler(webapp2.RequestHandler):
-	def get(self):
-		self.response.write("<h1>Pagina de Administrador</h1> <br/> <a href=/auser> Gestionar Usuarios </a> <br/> <a href=/aalbum> Gestionar albumes </a> <br/> <a href= '/'> Principal </a>")
-		
+    def get(self):
+        templateAdminLogin = jinja_env.get_template("templates/admin_login.html")
+        self.response.write(templateAdminLogin.render({}))
+        
 class AdminUserHandler(webapp2.RequestHandler):
-	def get(self):
-		self.response.write("<html><body><h1>Admin: Lista de usuarios </h1> <br/><br/><a href=/ladmin>Menu Admin</a>")
-		lusuarios = Usuarios.query()
-		for usuarios in lusuarios:
-		  self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.usuario))
-		  self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.contra))
-		  self.response.out.write("<blockquote>%s</blockquote>" % cgi.escape(usuarios.activo))
-		  self.response.out.write("""
-			<form action="/activar" method="post">
-				<!--<div>Usuario a Activar: <textarea name="anombre" rows="1" cols="30"></textarea></div>-->
-				<div><input type="submit" value="Activar"></div> <br/>
-			</form>
-			<form action="/borrarUsuario" method="post">
-				<!--<div>Usuario a Borrar: <textarea name="bnombre" rows="1" cols="30"></textarea></div>-->
-				<div><input type="submit" value="Borrar"></div> <br/>
-			</form>
-		</body>
-	</html>""")
+    def get(self):
+        templateAdminUser = jinja_env.get_template("templates/admin_user.html")
+        lusuarios = Usuarios.query(ancestor=album_key)
+        self.response.write(templateAdminUser.render({'users':lusuarios}))
 
 class AdminAlbumHandler(webapp2.RequestHandler):
-	def get(self):
-		self.response.write("<h1>Admin: Lista de albumes </h1>  <br/><br/><a href=/ladmin>Menu Admin</a>")
-		
+    def get(self):
+        templateAdminAlbum = jinja_env.get_template("templates/admin_album.html")
+        lalbumes = Albumes.query(ancestor=album_key)
+        #self.response.write("<h1>Admin: Lista de albumes </h1>  <br/><br/><a href=/ladmin>Menu Admin</a>")
+        self.response.write(templateAdminAlbum.render({'albumes' : lalbumes}))
+        
 class CreateAlbumHandler(session_module.BaseSessionHandler):
-	def post(self):
-		albumes = Albumes(parent=album_key)
-		albumes.usuario = self.session['susuario']
-		albumes.nombre = self.request.get('nombrealbum')
-		albumes.put()
-		self.redirect('luser')
-		
+    def post(self):
+        albumes = Albumes(parent=album_key)
+        albumes.usuario = self.session['susuario']
+        albumes.nombre = self.request.get('nombre')
+        albumes.descripcion = self.request.get('descripcion')
+        albumes.put()
+        self.redirect('luser')
+        
 class EditAlbumHandler(session_module.BaseSessionHandler):
-	def post(self):
-		#self.response.out.write("album: %s" % self.request.get('keyalbum'))
-		album_entity_key = ndb.Key(urlsafe=self.request.get('keyalbum'))
-		album = album_entity_key.get()
-		self.response.out.write("album: %s <br/>" % album.nombre)
-		lfotos = Fotos.query()
-		for foto in lfotos:
-		  if foto.albumid == self.request.get('keyalbum'):
-		    image = b64encode(foto.data)
-		    self.response.out.write("<blockquote><br/>Titulo: %s</blockquote>" % cgi.escape(foto.titulo))
-		    self.response.out.write("<blockquote><br/>Etiqueta: %s</blockquote>" % cgi.escape(foto.etiqueta))
-		    #self.response.headers['Content-Type'] = 'image/gif'
-		    #self.response.out.write(b64encode(foto.data))
-		    #self.response.out.write(foto.data.encode('base64'))
-		    #img_b64 = foto.data.getvalue().encode("base64").strip()
-		    self.response.write("<img src='data:image/png;base64,%s'/>" % foto.data.encode('base64'))
-		self.response.out.write("<br/>Subir una foto:")
-		self.response.out.write("""
-			<form action="/addpicture" method="post" enctype="multipart/form-data">
-				<input type="hidden" class="hidden" name="keyalbum" value= """ + self.request.get('keyalbum') +""" />
+    def post(self):
+        #self.response.out.write("album: %s" % self.request.get('keyalbum'))
+        album_entity_key = ndb.Key(urlsafe=self.request.get('keyalbum'))
+        album = album_entity_key.get()
+        self.response.out.write("album: %s <br/>" % album.nombre)
+        lfotos = Fotos.query()
+        for foto in lfotos:
+            if foto.albumid == self.request.get('keyalbum'):
+                image = b64encode(foto.data)
+                self.response.out.write("<blockquote><br/>Titulo: %s</blockquote>" % cgi.escape(foto.titulo))
+                self.response.out.write("<blockquote><br/>Etiqueta: %s</blockquote>" % cgi.escape(foto.etiqueta))
+                #self.response.headers['Content-Type'] = 'image/gif'
+                #self.response.out.write(b64encode(foto.data))
+                #self.response.out.write(foto.data.encode('base64'))
+                #img_b64 = foto.data.getvalue().encode("base64").strip()
+                self.response.write("<img src='data:image/png;base64,%s'/>" % foto.data.encode('base64'))
+            self.response.out.write("<br/>Subir una foto:")
+            self.response.out.write("""
+			    <form action="/addpicture" method="post" enctype="multipart/form-data">
+				    <input type="hidden" class="hidden" name="keyalbum" value= """ + self.request.get('keyalbum') +""" />
 				<div>image: <input type = "file" name = "image"></div> <br/>
 				<div>Titulo: <textarea name="titulofoto" rows="1" cols="30"></textarea></div>
 				<div>Introduce las etiquetas separadas por espacios: <textarea name="etiquetas" rows="1" cols="30"></textarea></div>
@@ -218,7 +165,7 @@ class EditAlbumHandler(session_module.BaseSessionHandler):
 	</html>""")
 
 
-	
+
 class AddPictureHandler(webapp2.RequestHandler):
     def post(self):
         fotos = Fotos(parent=album_key)
@@ -228,17 +175,21 @@ class AddPictureHandler(webapp2.RequestHandler):
         fotos.etiqueta = self.request.get('etiquetas')
         fotos.put()
         self.redirect('luser')
-		
+
 class PictureFinderHandler(session_module.BaseSessionHandler):
-	def post(self):
-		lfotos = Fotos.query()
-		for foto in lfotos:
-		  if self.request.get('etiqueta') in foto.etiqueta:
-		    image = b64encode(foto.data)
-		    self.response.out.write("<blockquote><br/>Titulo: %s</blockquote>" % cgi.escape(foto.titulo))
-		    self.response.out.write("<blockquote><br/>Etiqueta: %s</blockquote>" % cgi.escape(foto.etiqueta))
-		    self.response.write("<img src='data:image/png;base64,%s'/>" % foto.data.encode('base64'))
-			
+    def post(self):
+        lfotos = Fotos.query()
+        for foto in lfotos:
+            if self.request.get('etiqueta') in foto.etiqueta:
+                image = b64encode(foto.data)
+                self.response.out.write("<blockquote><br/>Titulo: %s</blockquote>" % cgi.escape(foto.titulo))
+                self.response.out.write("<blockquote><br/>Etiqueta: %s</blockquote>" % cgi.escape(foto.etiqueta))
+                self.response.write("<img src='data:image/png;base64,%s'/>" % foto.data.encode('base64'))
+
+class LogoutHandler(session_module.BaseSessionHandler):
+    def get(self): 
+        self.redirect("/")
+
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
 	('/reg', RegistroHandler),
@@ -252,5 +203,6 @@ app = webapp2.WSGIApplication([
 	('/editaralbum', EditAlbumHandler),
 	('/addpicture', AddPictureHandler),
 	('/buscafotos', PictureFinderHandler),
+    ('/logout', LogoutHandler),
 ], 	config=session_module.myconfig_dict, 
 	debug=True)
