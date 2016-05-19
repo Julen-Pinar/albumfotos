@@ -55,18 +55,24 @@ class Fotos(ndb.Model):
     data = ndb.BlobProperty()
     last_touch_date_time = ndb.DateTimeProperty(auto_now_add=True)
 
-class MainHandler(webapp2.RequestHandler):
+class MainHandler(session_module.BaseSessionHandler):
     def get(self):
-        templateBase = jinja_env.get_template("templates/base.html")
-        self.response.write(templateBase.render({}))
+        if self.session.get("susuario"):
+            self.redirect("luser")
+        else:
+            templateBase = jinja_env.get_template("templates/base.html")
+            self.response.write(templateBase.render({}))
 
-class RegistroHandler(webapp2.RequestHandler):
+class RegistroHandler(session_module.BaseSessionHandler):
     def get(self):
-        templateRegistro = jinja_env.get_template("templates/registro.html")
-        self.response.out.write(templateRegistro.render({}))
+        if self.session.get("susuario"):
+            self.redirect("luser")
+        else:
+            templateRegistro = jinja_env.get_template("templates/registro.html")
+            self.response.out.write(templateRegistro.render({}))
 
 
-class Registrar (webapp2.RequestHandler):
+class Registrar (session_module.BaseSessionHandler):
     def post(self):
         usuarios = Usuarios(parent=album_key)
         pattern1 = re.compile("^[a-zA-Z]+\d{3}@ikasle.ehu(.es|.eus)$")
@@ -107,63 +113,72 @@ class Loguear (session_module.BaseSessionHandler):
   
 class LoginUserHandler(session_module.BaseSessionHandler):
     def get(self):
-        templateUser = jinja_env.get_template("templates/user_base.html")
-        lalbumes = Albumes.query(ancestor=album_key).order(-Albumes.last_touch_date_time)
-        self.response.write(templateUser.render({'albumes' : lalbumes }))
+        if self.session.get("susuario"):
+            templateUser = jinja_env.get_template("templates/user_base.html")
+            lalbumes = Albumes.query(ancestor=album_key).order(-Albumes.last_touch_date_time)
+            self.response.write(templateUser.render({'albumes' : lalbumes }))
+        else:
+            self.redirect("/")
 
-class LoginAdminHandler(webapp2.RequestHandler):
+class LoginAdminHandler(session_module.BaseSessionHandler):
     def get(self):
-        templateAdminLogin = jinja_env.get_template("templates/admin_login.html")
-        self.response.write(templateAdminLogin.render({}))
+        if self.session.get("susuario") == "admin000@ikasle.ehu.eus" or self.session.get("susuario") == "admin000@ikasle.ehu.es" :
+            templateAdminLogin = jinja_env.get_template("templates/admin_login.html")
+            self.response.write(templateAdminLogin.render({}))
+        else:
+            self.redirect("/")
         
-class AdminUserHandler(webapp2.RequestHandler):
+class AdminUserHandler(session_module.BaseSessionHandler):
     def get(self):
-        templateAdminUser = jinja_env.get_template("templates/admin_user.html")
-        lusuarios = Usuarios.query(ancestor=album_key).order(-Usuarios.last_touch_date_time)
-        self.response.write(templateAdminUser.render({'users':lusuarios}))
+        if self.session.get("susuario") == "admin000@ikasle.ehu.eus" or self.session.get("susuario") == "admin000@ikasle.ehu.es" :
+            templateAdminUser = jinja_env.get_template("templates/admin_user.html")
+            lusuarios = Usuarios.query(ancestor=album_key).order(-Usuarios.last_touch_date_time)
+            self.response.write(templateAdminUser.render({'users':lusuarios}))
+        else:
+            self.redirect("/")
 
-class AdminAlbumHandler(webapp2.RequestHandler):
+class AdminAlbumHandler(session_module.BaseSessionHandler):
     def get(self):
-        templateAdminAlbum = jinja_env.get_template("templates/admin_album.html")
-        lalbumes = Albumes.query(ancestor=album_key).order(-Albumes.last_touch_date_time)
-        #self.response.write("<h1>Admin: Lista de albumes </h1>  <br/><br/><a href=/ladmin>Menu Admin</a>")
-        self.response.write(templateAdminAlbum.render({'albumes' : lalbumes}))
+        if self.session.get("susuario") == "admin000@ikasle.ehu.eus" or self.session.get("susuario") == "admin000@ikasle.ehu.es" :
+            templateAdminAlbum = jinja_env.get_template("templates/admin_album.html")
+            lalbumes = Albumes.query(ancestor=album_key).order(-Albumes.last_touch_date_time)
+            self.response.write(templateAdminAlbum.render({'albumes' : lalbumes}))
+        else:
+            self.redirect("/")
         
 class CreateAlbumHandler(session_module.BaseSessionHandler):
     def post(self):
-        albumes = Albumes(parent=album_key)
-        albumes.usuario = self.session['susuario']
-        albumes.nombre = self.request.get('nombre')
-        albumes.descripcion = self.request.get('descripcion')
-        albumes.put()
+        if self.request.get("entity_key"):
+            logging.info(self.request.get("entity_key"))
+            album_entity_key = ndb.Key(urlsafe=self.request.get("entity_key"))
+            album_entity = album_entity_key.get()
+            album_entity.nombre = self.request.get('nombre')
+            album_entity.descripcion = self.request.get('descripcion')
+            album_entity.put()
+        else:            
+            albumes = Albumes(parent=album_key)
+            albumes.usuario = self.session['susuario']
+            albumes.nombre = self.request.get('nombre')
+            albumes.descripcion = self.request.get('descripcion')
+            albumes.put()
         self.redirect(self.request.referer)
         
 class EditAlbumHandler(session_module.BaseSessionHandler):
     def get(self):
-        listaFotosId = []
-        album = Albumes.get_by_id(int(self.request.get_all('album')[0]), album_key)
-        if not album:
-            self.response.write("Error: Album no encontrado! Que andas buscando por aqui!? Aqui Blind SQL Injection no eh Juan! Aqui BLIND SQLI no! ")
+        if self.session.get("susuario"):
+            listaFotosId = []
+            album = Albumes.get_by_id(int(self.request.get_all('album')[0]), album_key)
+            if not album:
+                self.response.write("Error: Album no encontrado! Que andas buscando por aqui!? Aqui Blind SQL Injection no eh Juan! Aqui BLIND SQLI no! ")
+            else:
+                lfotos = Fotos.query(ancestor=album_key).order(Fotos.last_touch_date_time)
+                for foto in lfotos:
+                    if foto.albumid == str(album.key.id()):
+                        listaFotosId.append(foto)
+                templateAlbumBase = jinja_env.get_template("templates/album_base.html")
+                self.response.write(templateAlbumBase.render({'album' : album, 'fotos': listaFotosId}))
         else:
-            lfotos = Fotos.query(ancestor=album_key).order(-Fotos.last_touch_date_time)
-            for foto in lfotos:
-                if foto.albumid == str(album.key.id()):
-                    logging.info("HEY")
-                    listaFotosId.append(foto)
-                    #image = b64encode(foto.data)
-                    #self.response.out.write("<blockquote><br/>Titulo: %s</blockquote>" % cgi.escape(foto.titulo))
-                    #self.response.out.write("<blockquote><br/>Etiqueta: %s</blockquote>" % cgi.escape(foto.etiqueta))
-                    #self.response.headers['Content-Type'] = 'image/gif'
-                    #self.response.out.write(b64encode(foto.data))
-                    #self.response.out.write(foto.data.encode('base64'))
-                    #img_b64 = foto.data.getvalue().encode("base64").strip()
-                    #self.response.write("<img src='data:image/png;base64,%s'/>" % foto.data.encode('base64'))
-            templateAlbumBase = jinja_env.get_template("templates/album_base.html")
-            #self.response.write("<h1>Admin: Lista de albumes </h1>  <br/><br/><a href=/ladmin>Menu Admin</a>")
-            self.response.write(templateAlbumBase.render({'album' : album, 'fotos': listaFotosId}))
-            
-
-
+            self.redirect("/")
 
 class AddPictureHandler(webapp2.RequestHandler):
     def post(self):
@@ -176,17 +191,24 @@ class AddPictureHandler(webapp2.RequestHandler):
         self.redirect(self.request.referer)
 
 class PictureFinderHandler(session_module.BaseSessionHandler):
-    def post(self):
-        lfotos = Fotos.query(ancestor=album_key).order(-Fotos.last_touch_date_time)
-        for foto in lfotos:
-            if self.request.get('etiqueta') in foto.etiqueta:
-                image = b64encode(foto.data)
-                self.response.out.write("<blockquote><br/>Titulo: %s</blockquote>" % cgi.escape(foto.titulo))
-                self.response.out.write("<blockquote><br/>Etiqueta: %s</blockquote>" % cgi.escape(foto.etiqueta))
-                self.response.write("<img src='data:image/png;base64,%s'/>" % foto.data.encode('base64'))
+    def get(self):
+        if self.session.get("susuario"):
+            templateTags = jinja_env.get_template("templates/tags.html")
+            listaFotos = []
+            etiqueta = str(self.request.get_all('tag')[0])
+            lfotos = Fotos.query(ancestor=album_key).order(Fotos.last_touch_date_time)
+            for foto in lfotos:
+                if etiqueta in foto.etiqueta.split(' '):
+                    listaFotos.append(foto)
+            self.response.write(templateTags.render({'fotos': listaFotos}))
+        else:
+            self.redirect("/")
+                
 
 class LogoutHandler(session_module.BaseSessionHandler):
-    def get(self): 
+    def get(self):
+        if self.session.get("susuario"):
+            self.session.pop('susuario')
         self.redirect("/")
 
 class DeleteAlbumHandler(session_module.BaseSessionHandler):

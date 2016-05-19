@@ -51,7 +51,7 @@
 							<div class="descripcion">
 							{% set listTags = foto.etiqueta.split(' ') %}
 							{% for tag in listTags %}
-							<a href="/listForTags?tag={{tag}}"><span class="label label-default">{{tag}}</span></a>
+							<a href="/buscafotos?tag={{tag}}"><span class="label label-default">{{tag}}</span></a>
 							{% endfor %}	
 							</div>
 							<div class="photo_name">{{foto.titulo}}</div>
@@ -100,8 +100,7 @@
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-						<button type="submit" class="btn btn-primary">Insertar un
-							Album</button>
+						<button type="submit" class="btn btn-primary">Añadir Imagen</button>
 					</div>
 				</form>
 			</div>

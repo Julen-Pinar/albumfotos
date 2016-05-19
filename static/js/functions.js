@@ -25,12 +25,27 @@ rh.mq.enableButtons = function() {
 		entityKey = $(this).find(".entity-key").html();
 		$("#delete-image-modal input[name=entity_key]").val(entityKey).prop("disabled", false);
 	});
+	
+	$('.edit-album').click ( function() {
+	   $('#nombre').val($(this).find(".albumNombre").html());
+	   $('#descripcion').val($(this).find(".albumDesc").html());
+	   $("#insert-album-modal button[type=submit]").html("Modificar Album");
+	   $("#insert-album-modal #myModalLabel").html("Modificar Album");
+	   entityKey = $(this).find(".entity-key").html();
+	   $("#insert-album-modal input[name=entity_key]").val(entityKey).prop("disabled", false);
+	});
+	
+	$('.add-album').click ( function() {
+	   $('#nombre').val("");
+       $('#descripcion').val("");
+       $("#insert-album-modal button[type=submit]").html("Insertar Album");
+       $("#insert-album-modal #myModalLabel").html("Insertar un Album");
+       $("#insert-album-modal input[name=entity_key]").val("").prop("disabled", true);
+    });
 }
 
 
-rh.mq.enableInfo = function() {
-	
-			
+rh.mq.enableInfo = function() {	
 		if  ($.urlParam('success')) {
 			$('.info').addClass('bg-success');
 			$('.info').removeClass('hidden');
@@ -40,7 +55,6 @@ rh.mq.enableInfo = function() {
 			$('.info').removeClass('hidden');
 			$('.info').html(unescape($.urlParam('error')));
 		}
-
 }
 
 $(document).ready( function() {
