@@ -25,8 +25,7 @@
 	<div class="container">
 		<div class="row">
 			<h1>{{ album.nombre }}</h1>
-			<a href="luser">Volver a Albumes</a>
-			<br />
+			<a href="luser">Volver a Albumes</a> <br />
 			<h2>
 				Imagenes
 				<button type="button" data-toggle="modal"
@@ -46,13 +45,14 @@
 									<div class="hidden entity-key">{{ foto.key.urlsafe() }}</div>
 								</button>
 							</div>
-							<br /><br />
-							<img src="data:image/png;base64,{{ foto.data | b64encode }}" alt="{{foto.nombre}}">
+							<br />
+							<br /> <img
+								src="data:image/png;base64,{{ foto.data | b64encode }}"
+								alt="{{foto.nombre}}">
 							<div class="descripcion">
-							{% set listTags = foto.etiqueta.split(' ') %}
-							{% for tag in listTags %}
-							<a href="/buscafotos?tag={{tag}}"><span class="label label-default">{{tag}}</span></a>
-							{% endfor %}	
+								{% set listTags = foto.etiqueta.split(' ') %} {% for tag in
+								listTags %} <a href="/buscafotos?tag={{tag}}"><span
+									class="label label-default">{{tag}}</span></a> {% endfor %}
 							</div>
 							<div class="photo_name">{{foto.titulo}}</div>
 						</div>
@@ -74,8 +74,9 @@
 					<h4 class="modal-title" id="myModalLabel">Añadir Imagen</h4>
 				</div>
 				<form action="/addpicture" method="POST" class="form-horizontal"
-					role="form"  enctype="multipart/form-data">
-					<input type="hidden" class="hidden" name="keyalbum" value= "{{ album.key.id() }}" />
+					role="form" enctype="multipart/form-data">
+					<input type="hidden" class="hidden" name="keyalbum"
+						value="{{ album.key.id() }}" />
 					<div class="modal-body">
 						<div class="form-group">
 							<label for="titulofoto" class="col-sm-2 control-label">Nombre</label>
@@ -87,8 +88,9 @@
 						<div class="form-group">
 							<label for="etiquetas" class="col-sm-2 control-label">Etiquetas</label>
 							<div class="col-sm-10">
-							<input type="text" class="form-control" id="etiquetas"
-									name="etiquetas" placeholder="Etiquetas separadas por espacios (ej: 'Salud Bienestar Comida')">
+								<input type="text" class="form-control" id="etiquetas"
+									name="etiquetas"
+									placeholder="Etiquetas separadas por espacios (ej: 'Salud Bienestar Comida')">
 							</div>
 						</div>
 						<div class="form-group">
@@ -100,7 +102,8 @@
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-						<button type="submit" class="btn btn-primary">Añadir Imagen</button>
+						<button type="submit" class="btn btn-primary">Añadir
+							Imagen</button>
 					</div>
 				</form>
 			</div>
@@ -131,6 +134,25 @@
 			</div>
 		</div>
 	</div>
+	<footer class="site-footer">
+		<div class="container">
+			<div class="row">
+				<div class="col-sm-3">
+					<h6>Copyright &copy; 2016 Markelstrits Bois</h6>
+				</div>
+				<!--  End col-sm-2 -->
+				<div class="col-sm-7"></div>
+				<!--  End col-sm-5 -->
+				<div class="col-sm-2">
+					<h6>
+						Coded with <span class="glyphicon glyphicon-heart"></span> by Us
+					</h6>
+				</div>
+				<!--  End col-sm-2 -->
+			</div>
+		</div>
+		<!--  End Container -->
+	</footer>
 	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 	<script
 		src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>

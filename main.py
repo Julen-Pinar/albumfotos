@@ -58,7 +58,10 @@ class Fotos(ndb.Model):
 class MainHandler(session_module.BaseSessionHandler):
     def get(self):
         if self.session.get("susuario"):
-            self.redirect("luser")
+            if self.session.get("susuario") == "admin000@ikasle.ehu.eus" or self.session.get("susuario") == "admin000@ikasle.ehu.es":
+                self.redirect("ladmin")
+            else:
+                self.redirect("luser")
         else:
             templateBase = jinja_env.get_template("templates/base.html")
             self.response.write(templateBase.render({}))
@@ -66,7 +69,10 @@ class MainHandler(session_module.BaseSessionHandler):
 class RegistroHandler(session_module.BaseSessionHandler):
     def get(self):
         if self.session.get("susuario"):
-            self.redirect("luser")
+            if self.session.get("susuario") == "admin000@ikasle.ehu.eus" or self.session.get("susuario") == "admin000@ikasle.ehu.es":
+                self.redirect("ladmin")
+            else:
+                self.redirect("luser")
         else:
             templateRegistro = jinja_env.get_template("templates/registro.html")
             self.response.out.write(templateRegistro.render({}))
@@ -114,9 +120,16 @@ class Loguear (session_module.BaseSessionHandler):
 class LoginUserHandler(session_module.BaseSessionHandler):
     def get(self):
         if self.session.get("susuario"):
-            templateUser = jinja_env.get_template("templates/user_base.html")
-            lalbumes = Albumes.query(ancestor=album_key).order(-Albumes.last_touch_date_time)
-            self.response.write(templateUser.render({'albumes' : lalbumes }))
+            if self.session.get("susuario") == "admin000@ikasle.ehu.eus" or self.session.get("susuario") == "admin000@ikasle.ehu.es":
+                self.redirect("ladmin")
+            else:   
+                albumes = []
+                templateUser = jinja_env.get_template("templates/user_base.html")
+                lalbumes = Albumes.query(ancestor=album_key).order(-Albumes.last_touch_date_time)
+                for album in lalbumes:
+                        if album.usuario == str(self.session.get("susuario")):
+                            albumes.append(album)
+                self.response.write(templateUser.render({'albumes' : albumes }))
         else:
             self.redirect("/")
 

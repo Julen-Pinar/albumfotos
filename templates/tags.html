@@ -31,19 +31,13 @@
                 Imagenes
             </h2>
             <hr>
+            
+            {% if fotos %}
             <div class="canvas">
                 <div id="wrapper">
                     <div id="columns">
                         {% for foto in fotos %}
                         <div class="pin">
-                            <div class="actions pull-right">
-                                <button type="button" data-toggle="modal"
-                                    data-target="#delete-image-modal"
-                                    class="btn btn-xs btn-danger glyphicon glyphicon-remove delete-image">
-                                    <div class="hidden entity-key">{{ foto.key.urlsafe() }}</div>
-                                </button>
-                            </div>
-                            <br /><br />
                             <img src="data:image/png;base64,{{ foto.data | b64encode }}" alt="{{foto.nombre}}">
                             <div class="descripcion">
                             {% set listTags = foto.etiqueta.split(' ') %}
@@ -57,8 +51,30 @@
                     </div>
                 </div>
             </div>
+            {% else %}
+            <br />
+            <center><h1> No hay fotos con esos Tags</h1></center>
+            <br /><br />
+            {% endif %}
+            <hr>
+            <br />
         </div>
     </div>
+    <footer class="site-footer">
+    	<div class="container">
+    		<div class="row">
+    			<div class="col-sm-3">
+    				<h6>Copyright &copy; 2016 Markelstrits Bois</h6>
+    			</div><!--  End col-sm-2 -->
+    			<div class="col-sm-7">
+    				
+    			</div><!--  End col-sm-5 -->
+    			<div class="col-sm-2">
+    			<h6>Coded with <span class="glyphicon glyphicon-heart"></span> by Us</h6>
+    			</div><!--  End col-sm-2 -->
+    		</div>
+    	</div><!--  End Container -->
+    </footer>
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script
         src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
