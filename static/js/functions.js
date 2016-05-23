@@ -42,6 +42,16 @@ rh.mq.enableButtons = function() {
        $("#insert-album-modal #myModalLabel").html("Insertar un Album");
        $("#insert-album-modal input[name=entity_key]").val("").prop("disabled", true);
     });
+	
+	$('.activate-user').click ( function() {
+			entityKey = $(this).find(".entity-key").html();
+	       $("#activate-user-modal input[name=entity_key]").val(entityKey).prop("disabled", false);
+	});
+	
+	$('.deactivate-user').click ( function() {
+			entityKey = $(this).find(".entity-key").html();
+	       $("#deactivate-user-modal input[name=entity_key]").val(entityKey).prop("disabled", false);
+	});
 }
 
 

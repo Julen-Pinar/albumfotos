@@ -235,7 +235,18 @@ class DeleteImageHandler(session_module.BaseSessionHandler):
         image_entity_keyDEL = ndb.Key(urlsafe=self.request.get('entity_key'))
         image_entity_keyDEL.delete()
         self.redirect(self.request.referer)
-        
+
+class ToggleUserActivationHandler(session_module.BaseSessionHandler):
+    def post(self):
+        user_entity_key = ndb.Key(urlsafe=self.request.get('entity_key'))
+        user_entity = user_entity_key.get()
+        if user_entity.activo == '0':
+            user_entity.activo = '1'
+        else:
+            user_entity.activo = '0'
+        user_entity.put()
+        self.redirect(self.request.referer)
+
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
 	('/reg', RegistroHandler),
@@ -252,5 +263,6 @@ app = webapp2.WSGIApplication([
     ('/logout', LogoutHandler),
     ('/deleteAlbum', DeleteAlbumHandler),
     ('/deleteImage', DeleteImageHandler),
+    ('/toggleActivationUser', ToggleUserActivationHandler)
 ], 	config=session_module.myconfig_dict, 
 	debug=True)

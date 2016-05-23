@@ -33,6 +33,7 @@
 					class="btn btn-xs btn-success add-album">Añadir Imagen</button>
 			</h2>
 			<hr>
+			{% if fotos %}
 			<div class="canvas">
 				<div id="wrapper">
 					<div id="columns">
@@ -60,6 +61,14 @@
 					</div>
 				</div>
 			</div>
+			{% else %} <br />
+			<center>
+				<h1>No ha subido ninguna imagen</h1>
+			</center>
+			<br />
+			<br /> {% endif %}
+			<hr>
+			<br />
 		</div>
 	</div>
 	<!-- Insert Album Modal -->

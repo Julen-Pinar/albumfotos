@@ -41,19 +41,19 @@
 								<td class="edit-actions">{% if user.activo == "0" %}
 									<button type="button" data-toggle="modal"
 										data-target="#activate-user-modal"
-										class="btn btn-xs btn-success glyphicon glyphicon-ok-circle edit-movie-quote"
+										class="btn btn-xs btn-success glyphicon glyphicon-ok-circle activate-user"
 										title="Activate User">
 										<div class="hidden entity-key">{{ user.key.urlsafe() }}</div>
 									</button> {% else %}
 									<button type="button" data-toggle="modal"
 										data-target="#deactivate-user-modal"
-										class="btn btn-xs btn-danger glyphicon glyphicon-remove-circle edit-movie-quote"
+										class="btn btn-xs btn-danger glyphicon glyphicon-remove-circle deactivate-user"
 										title="Deactivate User">
 										<div class="hidden entity-key">{{ user.key.urlsafe() }}</div>
 									</button> {% endif %}
 									<button type="button" data-toggle="modal"
 										data-target="#delete-user-modal"
-										class="btn btn-xs btn-danger glyphicon glyphicon-remove delete-movie-quote"
+										class="btn btn-xs btn-danger glyphicon glyphicon-remove delete-user"
 										title="Delete User">
 										<div class="hidden entity-key">{{ user.key.urlsafe() }}</div>
 									</button>
@@ -79,7 +79,7 @@
 					</button>
 					<h4 class="modal-title" id="myModalLabel">Activate User</h4>
 				</div>
-				<form action="/activate" method="POST" class="form-horizontal"
+				<form action="/toggleActivationUser" method="POST" class="form-horizontal"
 					role="form">
 					<input type="text" name="entity_key" class="hidden">
 					<div class="modal-body">
@@ -117,7 +117,7 @@
 					</button>
 					<h4 class="modal-title" id="myModalLabel3">Deactivate User</h4>
 				</div>
-				<form action="/activate" method="POST" class="form-horizontal"
+				<form action="/toggleActivationUser" method="POST" class="form-horizontal"
 					role="form">
 					<input type="text" name="entity_key" class="hidden">
 					<div class="modal-body">
